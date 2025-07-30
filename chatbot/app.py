@@ -7,7 +7,9 @@ from datetime import datetime, timedelta, timezone
 import openpyxl
 import json
 
-HISTORY_FILE = "C:/ChennaiRiskChatbot/history.json"
+
+
+HISTORY_FILE = "history.json"
 
 # Load chat history
 if os.path.exists(HISTORY_FILE):
@@ -25,6 +27,7 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_current_ist_time():
     return datetime.now(IST).strftime("%I:%M %p")
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -68,6 +71,7 @@ for idx, place in enumerate(places):
     with cols[idx % 3]:
         st.markdown(f"- {place}")
 
+
 with st.sidebar:
     # Sidebar: Show Profile if user exists
     # Sidebar: Collapsible User Profile
@@ -78,6 +82,7 @@ with st.sidebar:
             st.markdown(f"- Gender: {st.session_state.get('user_gender', '-')}")
             st.markdown(f"- Email: {st.session_state.get('user_email', '-')}")
         st.markdown("---")
+
 
     st.markdown("## ➕ New Chat")
     if st.button("🔄 Start New Chat"):
@@ -154,6 +159,8 @@ if st.session_state.username == "" and st.session_state.chat_title == "":
             st.rerun()
         st.stop()
 
+
+
 def email_to_filename(email):
     return email.replace('@', 'at').replace('.', '_') + '.json'
 
@@ -167,6 +174,9 @@ if os.path.exists(user_file):
         st.session_state.messages = json.load(f)
 else:
     st.session_state.messages = st.session_state.get("messages", [])
+
+
+
 
 # Fuzzy zone matcher
 def find_zone(query_text, zone_list):
@@ -204,6 +214,7 @@ for msg in st.session_state.messages:
         role_name = "You" if msg["role"] == "user" else "AI"
         st.markdown(f"{role_icon} {role_name} {timestamp}")
         st.markdown(msg["content"])
+
 
     if msg["role"] == "assistant":
         zone = msg.get("zone", "")
@@ -342,6 +353,9 @@ for msg in st.session_state.messages:
                 }
                 show_precaution(factor, precaution_map.get(factor, ["Stay alert."]))
 
+
+            
+
 # Chat input
 # Chat input
 reply_type = None  # Prevent NameError on first check
@@ -357,6 +371,7 @@ if query:
     st.session_state.messages.append({
         "role": "user", "content": query, "time": timestamp
     })
+
 
     # 💬 Greeting check logic here
     greetings = [
@@ -435,6 +450,7 @@ if query:
             "crime": "Crime",
             "population": "Population"
         }
+        
         factor_found = None
         for keyword, column in specific_factors.items():
             if keyword in q:
@@ -454,8 +470,11 @@ if query:
             "factor": factor_found  # save factor for display section
         })
         st.rerun()
+
+
     else:
         bot_reply = "❓ Try asking about accidents, air pollution, crime, heat, flood, population, or risk."
+
     st.session_state.messages.append({
         "role": "assistant",
         "content": bot_reply,
@@ -463,18 +482,13 @@ if query:
         "type": reply_type,
         "zone": zone
     })
-    if st.session_state.username and st.session_state.chat_title:
-        if st.session_state.username not in all_histories:
-            all_histories[st.session_state.username] = {}
+    if st.session_state.username not in all_histories:
+        all_histories[st.session_state.username] = {}
 
-        all_histories[st.session_state.username][st.session_state.chat_title] = st.session_state.messages
+    all_histories[st.session_state.username][st.session_state.chat_title] = st.session_state.messages
 
-        try:
-            with open(HISTORY_FILE, "w") as f:
-                json.dump(all_histories, f, indent=2)
-        except Exception as e:
-            st.error(f"Failed to save history: {e}")
-    else:
-        st.warning("Username or chat title is missing. Cannot save history.")
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(all_histories, f, indent=2)
+
 
     st.rerun()
