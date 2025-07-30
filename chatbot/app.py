@@ -487,4 +487,4 @@ if query:
 
         with open(HISTORY_FILE, "w") as f:
             json.dump(all_histories, f, indent=2)
-    st.rerun()
+
