@@ -74,8 +74,7 @@ for idx, place in enumerate(places):
 
 with st.sidebar:
     # Sidebar: Show Profile if user exists
-    # Sidebar: Collapsible User Profile
-    if st.session_state.username:
+    if st.session_state.get("username"):
         with st.expander("👤 User Profile", expanded=False):
             st.markdown(f"- Name: {st.session_state.username}")
             st.markdown(f"- Age: {st.session_state.get('user_age', '-')}")
@@ -83,22 +82,19 @@ with st.sidebar:
             st.markdown(f"- Email: {st.session_state.get('user_email', '-')}")
         st.markdown("---")
 
-
     st.markdown("## ➕ New Chat")
     if st.button("🔄 Start New Chat"):
-        st.session_state.username = ""
-        st.session_state.chat_title = ""
-        st.session_state.messages = []
+        st.session_state.clear()  # Clears all session state safely
+        st.session_state.chat_reset = True  # Triggers clean rerun logic
         st.rerun()
-
 
     st.markdown("## 📜 Your Chat History")
 
-    current_user = st.session_state.username
+    current_user = st.session_state.get("username")
     if current_user and current_user in all_histories:
         user_chats = all_histories[current_user]
 
-        # ✅ Fix: Ensure user_chats is a dictionary before accessing .keys()
+        # ✅ Fix: Ensure user_chats is a dictionary
         if not isinstance(user_chats, dict):
             user_chats = {}
 
@@ -482,13 +478,13 @@ if query:
         "type": reply_type,
         "zone": zone
     })
-    if st.session_state.username not in all_histories:
-        all_histories[st.session_state.username] = {}
+    # ✅ Save chat to history
+    if st.session_state.get("username") and st.session_state.get("chat_title"):
+        if st.session_state.username not in all_histories:
+            all_histories[st.session_state.username] = {}
 
-    all_histories[st.session_state.username][st.session_state.chat_title] = st.session_state.messages
+        all_histories[st.session_state.username][st.session_state.chat_title] = st.session_state.get("messages", [])
 
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(all_histories, f, indent=2)
-
-
+        with open(HISTORY_FILE, "w") as f:
+            json.dump(all_histories, f, indent=2)
     st.rerun()
